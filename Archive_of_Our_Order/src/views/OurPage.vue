@@ -135,6 +135,11 @@ function formatDate(timestamp: number) {
 }
 
 function goToRecord(recordId: string) {
-  router.push(`/record/${recordId}`);
+  const item = filteredRatings.value.find(r => r.recordId === recordId);
+  if (item) {
+    router.push(`/record/${recordId}?memberId=${item.rating.memberId}`);
+  } else {
+    router.push(`/record/${recordId}`);
+  }
 }
 </script>

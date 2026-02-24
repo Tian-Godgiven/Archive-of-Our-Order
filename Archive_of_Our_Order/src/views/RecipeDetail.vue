@@ -7,8 +7,10 @@
   >
     <div class="max-w-md mx-auto" v-if="recipe">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between z-10">
-        <button @click="$router.back()" class="text-gray-600">← 返回</button>
+      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+        <button @click="$router.push('/')" class="text-gray-600 p-2 -ml-2">
+          <ChevronLeft :size="24" />
+        </button>
         <div v-if="!editingName" @click="startEditName" class="text-xl font-semibold cursor-pointer">{{ recipe.name }}</div>
         <input
           v-else
@@ -19,8 +21,12 @@
           class="text-xl font-semibold border-b-2 border-blue-500 outline-none text-center bg-transparent w-40"
         />
         <div class="flex gap-2">
-          <button @click="showSettings = true" class="text-blue-500">设置</button>
-          <button @click="addRecord" class="text-blue-500">添加</button>
+          <button @click="showSettings = true" class="text-gray-600 p-2 -mr-2">
+            <Settings :size="20" />
+          </button>
+          <button @click="addRecord" class="text-blue-500 p-2 -mr-2">
+            <Plus :size="22" />
+          </button>
         </div>
       </div>
 
@@ -41,7 +47,13 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <label class="text-sm font-medium text-gray-700">主厨总评</label>
-              <button @click="editingComment = true" class="text-blue-500 text-sm">编辑</button>
+              <button v-if="!editingComment" @click="editingComment = true; newComment = recipe.chefComment" class="text-gray-400 p-1">
+                <Pencil :size="16" />
+              </button>
+              <div v-else class="flex gap-3">
+                <button @click="editingComment = false" class="text-sm text-gray-400">取消</button>
+                <button @click="saveComment" class="text-sm text-blue-500 font-medium">保存</button>
+              </div>
             </div>
             <div v-if="!editingComment" class="text-gray-600">
               {{ recipe.chefComment || '暂无总评' }}
@@ -52,10 +64,6 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows="3"
               ></textarea>
-              <div class="flex gap-2 mt-2">
-                <button @click="saveComment" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">保存</button>
-                <button @click="editingComment = false" class="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
-              </div>
             </div>
           </div>
         </div>
@@ -64,22 +72,19 @@
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium text-gray-700">食材列表</label>
-            <button @click="editingIngredients = true" class="text-blue-500 text-sm">编辑</button>
+            <button v-if="!editingIngredients" @click="editingIngredients = true; newIngredients = recipe.ingredients || ''" class="text-gray-400 p-1">
+              <Pencil :size="16" />
+            </button>
+            <div v-else class="flex gap-3">
+              <button @click="editingIngredients = false" class="text-sm text-gray-400">取消</button>
+              <button @click="saveIngredients" class="text-sm text-blue-500 font-medium">保存</button>
+            </div>
           </div>
           <div v-if="!editingIngredients" class="text-gray-600 whitespace-pre-wrap">
             {{ recipe.ingredients || '暂未设置' }}
           </div>
           <div v-else>
-            <textarea
-              v-model="newIngredients"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="4"
-              placeholder="输入食材..."
-            ></textarea>
-            <div class="flex gap-2 mt-2">
-              <button @click="saveIngredients" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">保存</button>
-              <button @click="editingIngredients = false" class="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
-            </div>
+            <IngredientEditor v-model="newIngredients" />
           </div>
         </div>
 
@@ -87,7 +92,13 @@
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-medium text-gray-700">料理步骤</label>
-            <button @click="editingSteps = true" class="text-blue-500 text-sm">编辑</button>
+            <button v-if="!editingSteps" @click="editingSteps = true; newSteps = recipe.steps || ''" class="text-gray-400 p-1">
+              <Pencil :size="16" />
+            </button>
+            <div v-else class="flex gap-3">
+              <button @click="editingSteps = false" class="text-sm text-gray-400">取消</button>
+              <button @click="saveSteps" class="text-sm text-blue-500 font-medium">保存</button>
+            </div>
           </div>
           <div v-if="!editingSteps" class="text-gray-600 whitespace-pre-wrap">
             {{ recipe.steps || '暂未设置' }}
@@ -99,10 +110,6 @@
               rows="6"
               placeholder="输入料理步骤..."
             ></textarea>
-            <div class="flex gap-2 mt-2">
-              <button @click="saveSteps" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">保存</button>
-              <button @click="editingSteps = false" class="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
-            </div>
           </div>
         </div>
 
@@ -169,6 +176,8 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import ModalOverlay from '@/components/ModalOverlay.vue';
+import IngredientEditor from '@/components/IngredientEditor.vue';
+import { ChevronLeft, Settings, Plus, Pencil } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();

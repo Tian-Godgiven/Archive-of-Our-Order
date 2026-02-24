@@ -2,11 +2,17 @@
   <div class="min-h-screen bg-gray-50 pb-4">
     <div class="max-w-md mx-auto" v-if="record && recipe">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between z-10">
-        <button @click="goBack" class="text-gray-600">← 返回</button>
-        <h1 class="text-lg font-semibold">第{{ record.count }}次 · {{ formatDate(record.createdAt) }}</h1>
-        <button v-if="!isEditing" @click="startEdit" class="text-blue-500">编辑</button>
-        <button v-else @click="saveEdit" class="text-blue-500">保存</button>
+      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+        <button @click="goBack" class="text-gray-600 p-2 -ml-2">
+          <ChevronLeft :size="24" />
+        </button>
+        <h1 class="text-lg font-semibold">{{ recipe.name }}</h1>
+        <button v-if="!isEditing" @click="startEdit" class="text-blue-500 p-2 -mr-2">
+          <Pencil :size="20" />
+        </button>
+        <button v-else @click="saveEdit" class="text-blue-500 p-2 -mr-2">
+          <Check :size="20" />
+        </button>
       </div>
 
       <!-- 查看模式 -->
@@ -26,6 +32,10 @@
 
         <!-- 基本信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">第{{ record.count }}次</span>
+            <span class="text-sm text-gray-500">{{ formatDate(record.createdAt) }}</span>
+          </div>
           <div v-if="record.difficulty" class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-700">难度：</span>
             <span class="text-yellow-500">{{ '⭐'.repeat(record.difficulty) }}</span>
@@ -70,7 +80,7 @@
 
         <!-- 删除按钮 -->
         <button @click="deleteRecord" class="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-          删除记录
+          {{ memberIdFromQuery ? '删除该评价' : '删除记录' }}
         </button>
       </div>
 
@@ -166,12 +176,14 @@ import type { CookingRecord } from '@/types';
 import { getPhotoUrl } from '@/utils/photo';
 import PhotoUpload from '@/components/PhotoUpload.vue';
 import PhotoViewer from '@/components/PhotoViewer.vue';
+import { ChevronLeft, Pencil, Check } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
 const recipeStore = useRecipeStore();
 
 const recordId = route.params.id as string;
+const memberIdFromQuery = route.query.memberId as string | undefined;
 const record = computed(() => recipeStore.records.find(r => r.id === recordId));
 const recipe = computed(() => record.value ? recipeStore.getRecipeById(record.value.recipeId) : null);
 
@@ -213,9 +225,20 @@ function cancelEdit() {
 }
 
 function deleteRecord() {
-  if (confirm('确定要删除这条记录吗？')) {
-    recipeStore.deleteRecord(recordId);
-    goBack();
+  if (memberIdFromQuery) {
+    if (confirm('确定要删除该成员的评价吗？')) {
+      recipeStore.saveRecord({
+        ...record.value!,
+        ratings: record.value!.ratings.filter(r => r.memberId !== memberIdFromQuery),
+        updatedAt: Date.now(),
+      });
+      goBack();
+    }
+  } else {
+    if (confirm('确定要删除这条记录吗？')) {
+      recipeStore.deleteRecord(recordId);
+      goBack();
+    }
   }
 }
 
@@ -223,7 +246,7 @@ function goBack() {
   if (recipe.value) {
     router.push(`/recipe/${recipe.value.id}`);
   } else {
-    router.back();
+    router.push('/');
   }
 }
 

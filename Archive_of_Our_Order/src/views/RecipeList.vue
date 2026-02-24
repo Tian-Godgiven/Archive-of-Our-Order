@@ -39,7 +39,7 @@
             <span>⏱️ {{ Math.round(getAverageDuration(recipe.id)) }}分钟</span>
             <span>📝 {{ getRecordCount(recipe.id) }}次</span>
           </div>
-          <div class="mt-2 text-red-500 font-medium">
+          <div class="mt-2 font-medium" :class="getTimeSinceLastCookedColor(recipe.id)">
             {{ getTimeSinceLastCooked(recipe.id) }}
           </div>
         </div>
@@ -183,6 +183,17 @@ function getAverageDuration(recipeId: string) {
 
 function getRecordCount(recipeId: string) {
   return recipeStore.getRecordsByRecipeId(recipeId).length;
+}
+
+function getTimeSinceLastCookedColor(recipeId: string) {
+  const lastTime = recipeStore.getLastCookedTime(recipeId);
+  if (lastTime === 0) return 'text-orange-500';
+
+  const days = Math.floor((Date.now() - lastTime) / (1000 * 60 * 60 * 24));
+  if (days < 5) return 'text-blue-500';
+  if (days < 15) return 'text-green-500';
+  if (days < 30) return 'text-yellow-500';
+  return 'text-orange-500';
 }
 
 function getTimeSinceLastCooked(recipeId: string) {
