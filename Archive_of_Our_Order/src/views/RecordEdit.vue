@@ -18,7 +18,13 @@
 
         <!-- 食材列表 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">食材列表</h3>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-700">食材列表</h3>
+            <label class="flex items-center gap-1 text-sm cursor-pointer select-none">
+              <input type="checkbox" v-model="updateIngredients" class="accent-blue-500" />
+              <span :class="updateIngredients ? 'text-blue-500' : 'text-gray-400'">更新到菜谱</span>
+            </label>
+          </div>
           <textarea
             v-model="formData.ingredients"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -29,7 +35,13 @@
 
         <!-- 制作步骤 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">制作步骤</h3>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-gray-700">制作步骤</h3>
+            <label class="flex items-center gap-1 text-sm cursor-pointer select-none">
+              <input type="checkbox" v-model="updateSteps" class="accent-blue-500" />
+              <span :class="updateSteps ? 'text-blue-500' : 'text-gray-400'">更新到菜谱</span>
+            </label>
+          </div>
           <textarea
             v-model="formData.steps"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -132,7 +144,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import { useMemberStore } from '@/stores/memberStore';
@@ -162,10 +174,24 @@ const formData = ref({
 
 const showPhotoViewer = ref(false);
 const photoViewerIndex = ref(0);
+const updateIngredients = ref(false);
+const updateSteps = ref(false);
 
 onMounted(() => {
   recipeStore.loadData();
   memberStore.loadData();
+  if (recipe.value) {
+    formData.value.ingredients = recipe.value.ingredients || '';
+    formData.value.steps = recipe.value.steps || '';
+  } else {
+    const unwatch = watch(recipe, (val) => {
+      if (val) {
+        formData.value.ingredients = val.ingredients || '';
+        formData.value.steps = val.steps || '';
+        unwatch();
+      }
+    });
+  }
 });
 
 function getMemberRating(memberId: string): MemberRating {
@@ -229,6 +255,17 @@ function saveRecord() {
   };
 
   recipeStore.saveRecord(record);
+
+  // 根据开关状态更新菜谱默认值
+  if (updateIngredients.value || updateSteps.value) {
+    recipeStore.saveRecipe({
+      ...recipe.value,
+      ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
+      ...(updateSteps.value && { steps: formData.value.steps }),
+      updatedAt: Date.now(),
+    });
+  }
+
   router.push(`/recipe/${recipeId}`);
 }
 </script>

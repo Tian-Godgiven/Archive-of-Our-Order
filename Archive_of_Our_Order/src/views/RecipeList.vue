@@ -64,7 +64,7 @@
       </div>
 
       <!-- 快速添加弹窗 -->
-      <div v-if="showQuickAdd" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showQuickAdd = false">
+      <ModalOverlay :visible="showQuickAdd" @close="showQuickAdd = false">
         <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full" @click.stop>
           <h3 class="text-lg font-semibold mb-4">添加记录</h3>
           <div class="space-y-3">
@@ -82,10 +82,10 @@
             </button>
           </div>
         </div>
-      </div>
+      </ModalOverlay>
 
       <!-- 选择已有菜谱弹窗 -->
-      <div v-if="showSelectRecipe" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showSelectRecipe = false">
+      <ModalOverlay :visible="showSelectRecipe" @close="showSelectRecipe = false">
         <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full max-h-96 flex flex-col" @click.stop>
           <h3 class="text-lg font-semibold mb-4">选择菜谱</h3>
 
@@ -114,7 +114,7 @@
             没有找到菜谱
           </div>
         </div>
-      </div>
+      </ModalOverlay>
     </div>
   </div>
 </template>
@@ -123,6 +123,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
+import ModalOverlay from '@/components/ModalOverlay.vue';
 
 const router = useRouter();
 const recipeStore = useRecipeStore();
@@ -203,21 +204,18 @@ function goToRecipe(id: string) {
   router.push(`/recipe/${id}`);
 }
 
-function createNewRecipe() {
-  const name = prompt('请输入菜名：');
-  if (name) {
-    const recipe = {
-      id: Date.now().toString(),
-      name,
-      chefComment: '',
-      hideFromHome: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    recipeStore.saveRecipe(recipe);
-    router.push(`/record/add/${recipe.id}`);
-  }
+async function createNewRecipe() {
+  const recipe = {
+    id: Date.now().toString(),
+    name: '新菜谱',
+    chefComment: '',
+    hideFromHome: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await recipeStore.saveRecipe(recipe);
   showQuickAdd.value = false;
+  router.push(`/recipe/${recipe.id}?new=true`);
 }
 
 function selectRecipeForRecord(recipeId: string) {

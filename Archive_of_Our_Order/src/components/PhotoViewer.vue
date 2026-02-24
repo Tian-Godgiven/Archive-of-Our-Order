@@ -1,14 +1,10 @@
 <template>
-  <Teleport to="body">
-    <div
-      v-if="visible"
-      class="fixed inset-0 bg-black z-50 flex items-center justify-center"
-      @click="close"
-    >
+  <ModalOverlay :visible="visible" :dark="true" @close="close">
+    <div class="relative w-full h-full" @click.stop>
       <!-- 关闭按钮 -->
       <button
         class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30 z-10"
-        @click.stop="close"
+        @click="close"
       >
         ×
       </button>
@@ -16,7 +12,6 @@
       <!-- 照片显示 -->
       <div
         class="relative w-full h-full flex items-center justify-center"
-        @click.stop
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
         @touchend="handleTouchEnd"
@@ -24,20 +19,19 @@
         <img
           :src="currentPhotoUrl"
           class="max-w-full max-h-full object-contain"
-          @click.stop
         />
 
         <!-- 左右切换按钮 -->
         <button
           v-if="hasPrevious"
-          @click.stop="previous"
+          @click="previous"
           class="absolute left-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30"
         >
           ‹
         </button>
         <button
           v-if="hasNext"
-          @click.stop="next"
+          @click="next"
           class="absolute right-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30"
         >
           ›
@@ -52,12 +46,13 @@
         </div>
       </div>
     </div>
-  </Teleport>
+  </ModalOverlay>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { getPhotoUrl } from '@/utils/photo';
+import ModalOverlay from '@/components/ModalOverlay.vue';
 
 const props = defineProps<{
   visible: boolean;

@@ -3,8 +3,9 @@ export interface Recipe {
   id: string;
   name: string;
   chefComment: string;
-  bestIngredientsId?: string; // 指向最完美食材列表的记录ID
-  hideFromHome: boolean; // 是否在首页隐藏
+  ingredients?: string; // 默认食材列表
+  steps?: string; // 默认制作步骤
+  hideFromHome: boolean;
   createdAt: number;
   updatedAt: number;
 }

@@ -1,7 +1,15 @@
-import { Store } from '@tauri-apps/plugin-store';
+import { load } from '@tauri-apps/plugin-store';
 import type { AppData, Recipe, CookingRecord, Member } from '@/types';
 
-const store = new Store('app-data.json');
+type StoreInstance = Awaited<ReturnType<typeof load>>;
+let _store: StoreInstance | null = null;
+
+async function getStore(): Promise<StoreInstance> {
+  if (!_store) {
+    _store = await load('app-data.json', { autoSave: false });
+  }
+  return _store;
+}
 
 // 初始化数据
 const initData: AppData = {
@@ -12,12 +20,14 @@ const initData: AppData = {
 
 // 获取所有数据
 export async function loadData(): Promise<AppData> {
+  const store = await getStore();
   const data = await store.get<AppData>('data');
   return data || initData;
 }
 
 // 保存所有数据
 export async function saveData(data: AppData): Promise<void> {
+  const store = await getStore();
   await store.set('data', data);
   await store.save();
 }

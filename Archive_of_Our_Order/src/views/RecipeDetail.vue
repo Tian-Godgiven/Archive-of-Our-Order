@@ -9,7 +9,15 @@
       <!-- 固定顶部栏 -->
       <div class="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between z-10">
         <button @click="$router.back()" class="text-gray-600">← 返回</button>
-        <h1 class="text-xl font-semibold">{{ recipe.name }}</h1>
+        <div v-if="!editingName" @click="startEditName" class="text-xl font-semibold cursor-pointer">{{ recipe.name }}</div>
+        <input
+          v-else
+          v-model="newName"
+          ref="nameInput"
+          @blur="saveName"
+          @keyup.enter="saveName"
+          class="text-xl font-semibold border-b-2 border-blue-500 outline-none text-center bg-transparent w-40"
+        />
         <div class="flex gap-2">
           <button @click="showSettings = true" class="text-blue-500">设置</button>
           <button @click="addRecord" class="text-blue-500">添加</button>
@@ -29,10 +37,10 @@
             {{ timeSinceLastCooked }}
           </div>
 
-          <!-- 厨师总评 -->
+          <!-- 主厨总评 -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700">厨师总评</label>
+              <label class="text-sm font-medium text-gray-700">主厨总评</label>
               <button @click="editingComment = true" class="text-blue-500 text-sm">编辑</button>
             </div>
             <div v-if="!editingComment" class="text-gray-600">
@@ -52,14 +60,49 @@
           </div>
         </div>
 
-        <!-- 最完美食材列表 -->
+        <!-- 默认食材 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-700">最完美食材列表</label>
-            <button @click="selectBestIngredients" class="text-blue-500 text-sm">选择</button>
+            <label class="text-sm font-medium text-gray-700">食材列表</label>
+            <button @click="editingIngredients = true" class="text-blue-500 text-sm">编辑</button>
           </div>
-          <div class="text-gray-600 whitespace-pre-wrap">
-            {{ bestIngredients || '未设置' }}
+          <div v-if="!editingIngredients" class="text-gray-600 whitespace-pre-wrap">
+            {{ recipe.ingredients || '暂未设置' }}
+          </div>
+          <div v-else>
+            <textarea
+              v-model="newIngredients"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+              placeholder="输入食材..."
+            ></textarea>
+            <div class="flex gap-2 mt-2">
+              <button @click="saveIngredients" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">保存</button>
+              <button @click="editingIngredients = false" class="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 默认步骤 -->
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">料理步骤</label>
+            <button @click="editingSteps = true" class="text-blue-500 text-sm">编辑</button>
+          </div>
+          <div v-if="!editingSteps" class="text-gray-600 whitespace-pre-wrap">
+            {{ recipe.steps || '暂未设置' }}
+          </div>
+          <div v-else>
+            <textarea
+              v-model="newSteps"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="6"
+              placeholder="输入料理步骤..."
+            ></textarea>
+            <div class="flex gap-2 mt-2">
+              <button @click="saveSteps" class="px-3 py-1 bg-blue-500 text-white rounded text-sm">保存</button>
+              <button @click="editingSteps = false" class="px-3 py-1 bg-gray-200 rounded text-sm">取消</button>
+            </div>
           </div>
         </div>
 
@@ -97,7 +140,7 @@
       </div>
 
       <!-- 设置弹窗 -->
-      <div v-if="showSettings" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showSettings = false">
+      <ModalOverlay :visible="showSettings" @close="showSettings = false">
         <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full" @click.stop>
           <h3 class="text-lg font-semibold mb-4">设置</h3>
           <div class="space-y-3">
@@ -115,36 +158,17 @@
             </button>
           </div>
         </div>
-      </div>
+      </ModalOverlay>
 
-      <!-- 选择最完美食材列表弹窗 -->
-      <div v-if="showSelectIngredients" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showSelectIngredients = false">
-        <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full max-h-96 overflow-y-auto" @click.stop>
-          <h3 class="text-lg font-semibold mb-4">选择最完美食材列表</h3>
-          <div class="space-y-2">
-            <div
-              v-for="record in recordsWithIngredients"
-              :key="record.id"
-              @click="setBestIngredients(record.id)"
-              class="p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-            >
-              <div class="text-sm text-gray-600 mb-1">第{{ record.count }}次 - {{ formatDate(record.createdAt) }}</div>
-              <div class="text-gray-800 line-clamp-3 whitespace-pre-wrap">{{ record.ingredients }}</div>
-            </div>
-          </div>
-          <div v-if="recordsWithIngredients.length === 0" class="text-center text-gray-500 py-4">
-            暂无可选的食材列表
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
+import ModalOverlay from '@/components/ModalOverlay.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -157,7 +181,13 @@ const records = computed(() => recipeStore.getRecordsByRecipeId(recipeId));
 const editingComment = ref(false);
 const newComment = ref('');
 const showSettings = ref(false);
-const showSelectIngredients = ref(false);
+const editingName = ref(false);
+const newName = ref('');
+const nameInput = ref<HTMLInputElement | null>(null);
+const editingIngredients = ref(false);
+const newIngredients = ref('');
+const editingSteps = ref(false);
+const newSteps = ref('');
 
 // 滑动相关
 const touchStartX = ref(0);
@@ -180,16 +210,6 @@ const timeSinceLastCooked = computed(() => {
   if (days < 7) return `${days}天前`;
   if (days < 30) return `${Math.floor(days / 7)}周前`;
   return `${Math.floor(days / 30)}个月前`;
-});
-
-const bestIngredients = computed(() => {
-  if (!recipe.value?.bestIngredientsId) return '';
-  const record = records.value.find(r => r.id === recipe.value?.bestIngredientsId);
-  return record?.ingredients || '';
-});
-
-const recordsWithIngredients = computed(() => {
-  return records.value.filter(r => r.ingredients && r.ingredients.trim());
 });
 
 // 获取当前菜谱在列表中的索引
@@ -218,6 +238,20 @@ const nextRecipe = computed(() => {
 onMounted(() => {
   if (recipe.value) {
     newComment.value = recipe.value.chefComment;
+    newIngredients.value = recipe.value.ingredients || '';
+    newSteps.value = recipe.value.steps || '';
+  }
+  if (route.query.new === 'true') {
+    if (recipe.value) {
+      startEditName();
+    } else {
+      const unwatch = watch(recipe, (val) => {
+        if (val) {
+          startEditName();
+          unwatch();
+        }
+      });
+    }
   }
 });
 
@@ -253,6 +287,27 @@ function formatDate(timestamp: number) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
 
+function startEditName() {
+  if (!recipe.value) return;
+  newName.value = recipe.value.name;
+  editingName.value = true;
+  nextTick(() => nameInput.value?.focus());
+  if (route.query.new === 'true') {
+    router.replace({ params: route.params });
+  }
+}
+
+function saveName() {
+  if (recipe.value && newName.value.trim()) {
+    recipeStore.saveRecipe({
+      ...recipe.value,
+      name: newName.value.trim(),
+      updatedAt: Date.now(),
+    });
+  }
+  editingName.value = false;
+}
+
 function saveComment() {
   if (recipe.value) {
     recipeStore.saveRecipe({
@@ -264,18 +319,25 @@ function saveComment() {
   }
 }
 
-function selectBestIngredients() {
-  showSelectIngredients.value = true;
-}
-
-function setBestIngredients(recordId: string) {
+function saveIngredients() {
   if (recipe.value) {
     recipeStore.saveRecipe({
       ...recipe.value,
-      bestIngredientsId: recordId,
+      ingredients: newIngredients.value,
       updatedAt: Date.now(),
     });
-    showSelectIngredients.value = false;
+    editingIngredients.value = false;
+  }
+}
+
+function saveSteps() {
+  if (recipe.value) {
+    recipeStore.saveRecipe({
+      ...recipe.value,
+      steps: newSteps.value,
+      updatedAt: Date.now(),
+    });
+    editingSteps.value = false;
   }
 }
 
