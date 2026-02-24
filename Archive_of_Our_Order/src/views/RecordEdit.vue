@@ -12,69 +12,86 @@
       <div class="p-4 space-y-4">
         <!-- 照片上传 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">照片</h3>
           <PhotoUpload v-model="formData.photos" @view="viewPhoto" />
         </div>
 
         <!-- 食材列表 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-700">食材列表</h3>
-            <label class="flex items-center gap-1 text-sm cursor-pointer select-none">
+        <div class="bg-white rounded-lg p-4 shadow-sm" :class="!expandIngredients ? 'cursor-pointer' : ''" @click="!expandIngredients && (expandIngredients = true)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" @click.stop="expandIngredients = !expandIngredients">
+              <ChevronDown :size="16" class="text-gray-400 transition-transform" :class="expandIngredients ? 'rotate-180' : ''" />
+              <h3 class="text-sm font-medium text-gray-700">食材列表</h3>
+            </div>
+            <label v-if="expandIngredients" class="flex items-center gap-1 text-sm cursor-pointer select-none" @click.stop>
               <input type="checkbox" v-model="updateIngredients" class="accent-blue-500" />
               <span :class="updateIngredients ? 'text-blue-500' : 'text-gray-400'">更新到菜谱</span>
             </label>
           </div>
-          <textarea
-            v-model="formData.ingredients"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="4"
-            placeholder="输入食材列表..."
-          ></textarea>
+          <div v-if="expandIngredients" class="mt-3">
+            <textarea
+              v-model="formData.ingredients"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+              placeholder="输入食材列表..."
+            ></textarea>
+          </div>
         </div>
 
         <!-- 制作步骤 -->
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-sm font-medium text-gray-700">制作步骤</h3>
-            <label class="flex items-center gap-1 text-sm cursor-pointer select-none">
+        <div class="bg-white rounded-lg p-4 shadow-sm" :class="!expandSteps ? 'cursor-pointer' : ''" @click="!expandSteps && (expandSteps = true)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" @click.stop="expandSteps = !expandSteps">
+              <ChevronDown :size="16" class="text-gray-400 transition-transform" :class="expandSteps ? 'rotate-180' : ''" />
+              <h3 class="text-sm font-medium text-gray-700">制作步骤</h3>
+            </div>
+            <label v-if="expandSteps" class="flex items-center gap-1 text-sm cursor-pointer select-none" @click.stop>
               <input type="checkbox" v-model="updateSteps" class="accent-blue-500" />
               <span :class="updateSteps ? 'text-blue-500' : 'text-gray-400'">更新到菜谱</span>
             </label>
           </div>
-          <textarea
-            v-model="formData.steps"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="6"
-            placeholder="输入制作步骤..."
-          ></textarea>
+          <div v-if="expandSteps" class="mt-3">
+            <textarea
+              v-model="formData.steps"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="6"
+              placeholder="输入制作步骤..."
+            ></textarea>
+          </div>
         </div>
 
         <!-- 难度 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">难度</h3>
-          <div class="flex gap-2">
-            <button
-              v-for="star in 5"
-              :key="star"
-              @click="formData.difficulty = star"
-              class="text-2xl"
-              :class="star <= (formData.difficulty || 0) ? 'text-yellow-500' : 'text-gray-300'"
-            >
-              ⭐
-            </button>
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-medium text-gray-700">难度</h3>
+            <StarRating :model-value="formData.difficulty || 0" @update:model-value="formData.difficulty = $event" />
           </div>
         </div>
 
         <!-- 时长 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
-          <h3 class="text-sm font-medium text-gray-700 mb-2">制作时长（分钟）</h3>
-          <input
-            v-model.number="formData.duration"
-            type="number"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="输入时长..."
-          />
+          <h3 class="text-sm font-medium text-gray-700 mb-2">制作时长</h3>
+          <div class="flex items-center gap-3">
+            <input
+              :value="durationHours"
+              @input="durationHours = Math.max(0, parseInt(($event.target as HTMLInputElement).value) || 0)"
+              type="text"
+              inputmode="numeric"
+              maxlength="3"
+              class="w-12 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              placeholder="0"
+            />
+            <span class="text-gray-600">时</span>
+            <input
+              :value="durationMinutes"
+              @input="durationMinutes = Math.min(59, Math.max(0, parseInt(($event.target as HTMLInputElement).value) || 0))"
+              type="text"
+              inputmode="numeric"
+              maxlength="2"
+              class="w-12 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right"
+              placeholder="0"
+            />
+            <span class="text-gray-600">分</span>
+          </div>
         </div>
 
         <!-- 心得 -->
@@ -101,17 +118,7 @@
             >
               <div class="flex items-center justify-between mb-2">
                 <span class="font-medium">{{ member.name }}</span>
-                <div class="flex gap-1">
-                  <button
-                    v-for="star in 5"
-                    :key="star"
-                    @click="setMemberRating(member.id, member.name, star)"
-                    class="text-lg"
-                    :class="star <= getMemberStars(member.id) ? 'text-yellow-500' : 'text-gray-300'"
-                  >
-                    ⭐
-                  </button>
-                </div>
+                <StarRating :model-value="getMemberStars(member.id)" @update:model-value="setMemberRating(member.id, member.name, $event)" :size="20" />
               </div>
               <input
                 v-if="getMemberStars(member.id) > 0"
@@ -152,6 +159,8 @@ import type { CookingRecord, MemberRating } from '@/types';
 import { generateId } from '@/utils/storage';
 import PhotoUpload from '@/components/PhotoUpload.vue';
 import PhotoViewer from '@/components/PhotoViewer.vue';
+import StarRating from '@/components/StarRating.vue';
+import { ChevronDown } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -176,6 +185,22 @@ const showPhotoViewer = ref(false);
 const photoViewerIndex = ref(0);
 const updateIngredients = ref(false);
 const updateSteps = ref(false);
+const expandIngredients = ref(false);
+const expandSteps = ref(false);
+
+// 时长拆分为时和分，保存时合并为总分钟数
+const durationHours = computed({
+  get: () => Math.floor((formData.value.duration || 0) / 60),
+  set: (val: number) => {
+    formData.value.duration = (val || 0) * 60 + durationMinutes.value;
+  },
+});
+const durationMinutes = computed({
+  get: () => (formData.value.duration || 0) % 60,
+  set: (val: number) => {
+    formData.value.duration = durationHours.value * 60 + (val || 0);
+  },
+});
 
 onMounted(() => {
   recipeStore.loadData();
