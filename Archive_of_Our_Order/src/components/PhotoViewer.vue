@@ -3,10 +3,10 @@
     <div class="relative w-full h-full" @click.stop>
       <!-- 关闭按钮 -->
       <button
-        class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30 z-10"
+        class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30 z-10"
         @click="close"
       >
-        ×
+        <X :size="20" />
       </button>
 
       <!-- 照片显示 -->
@@ -25,16 +25,16 @@
         <button
           v-if="hasPrevious"
           @click="previous"
-          class="absolute left-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30"
+          class="absolute left-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30"
         >
-          ‹
+          <ChevronLeft :size="24" />
         </button>
         <button
           v-if="hasNext"
           @click="next"
-          class="absolute right-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white text-2xl hover:bg-opacity-30"
+          class="absolute right-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30"
         >
-          ›
+          <ChevronRight :size="24" />
         </button>
 
         <!-- 指示器 -->
@@ -53,6 +53,7 @@
 import { ref, computed } from 'vue';
 import { getPhotoUrl } from '@/utils/photo';
 import ModalOverlay from '@/components/ModalOverlay.vue';
+import { X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
 const props = defineProps<{
   visible: boolean;

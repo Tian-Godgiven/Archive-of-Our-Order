@@ -32,9 +32,9 @@
             <div class="relative">
               <button
                 @click.stop="toggleActionMenu(member)"
-                class="px-3 py-1 text-gray-600 hover:text-gray-800 text-xl"
+                class="px-3 py-1 text-gray-600 hover:text-gray-800"
               >
-                ···
+                <MoreVertical :size="20" />
               </button>
 
               <!-- 下拉菜单 -->
@@ -44,7 +44,7 @@
                   class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition flex items-center justify-between"
                 >
                   <span>默认家庭组</span>
-                  <svg v-if="member.isDefault" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><polyline points="20 6 9 17 4 12"/></svg>
+                  <Check v-if="member.isDefault" :size="16" class="text-blue-500" />
                 </button>
                 <button
                   @click="handleEdit(member)"
@@ -108,7 +108,7 @@ import type { Member } from '@/types';
 import { generateId } from '@/utils/storage';
 import ModalOverlay from '@/components/ModalOverlay.vue';
 import DropdownMenu from '@/components/DropdownMenu.vue';
-import { ChevronLeft, Plus } from 'lucide-vue-next';
+import { ChevronLeft, Plus, MoreVertical, Check } from 'lucide-vue-next';
 
 const memberStore = useMemberStore();
 const members = computed(() => memberStore.members);

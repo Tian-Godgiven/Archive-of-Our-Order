@@ -3,10 +3,10 @@
     <div class="max-w-md mx-auto" v-if="recipe">
       <!-- 固定顶部栏 -->
       <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
-        <button @click="$router.push(`/recipe/${recipeId}`)" class="text-gray-600 p-2 -ml-2">
+        <button @click="goBack" class="text-gray-600 p-2 -ml-2">
           <ChevronLeft :size="24" />
         </button>
-        <h1 class="text-lg font-semibold">{{ recipe.name }}</h1>
+        <h1 class="text-lg font-semibold">{{ isEditMode ? recipe.name + ' · 编辑记录' : recipe.name }}</h1>
         <button @click="saveRecord" class="text-blue-500">保存</button>
       </div>
 
@@ -15,7 +15,7 @@
         <!-- 次数和日期 -->
         <div class="bg-white rounded-lg p-4 shadow-sm flex items-center justify-between">
           <span class="text-sm font-medium text-gray-700">第{{ nextCount }}次</span>
-          <span class="text-sm text-gray-500">{{ todayStr }}</span>
+          <span class="text-sm text-gray-500">{{ isEditMode ? editDateStr : todayStr }}</span>
         </div>
 
         <!-- 食材列表 -->
@@ -210,8 +210,16 @@ const router = useRouter();
 const recipeStore = useRecipeStore();
 const memberStore = useMemberStore();
 
-const recipeId = route.params.recipeId as string;
-const recipe = computed(() => recipeStore.getRecipeById(recipeId));
+const recipeId = route.params.recipeId as string | undefined;
+const recordId = route.params.id as string | undefined;
+const isEditMode = computed(() => !!recordId);
+const recipe = computed(() => {
+  if (isEditMode.value && recordId) {
+    const record = recipeStore.records.find(r => r.id === recordId);
+    return record ? recipeStore.getRecipeById(record.recipeId) : null;
+  }
+  return recipeId ? recipeStore.getRecipeById(recipeId) : null;
+});
 const defaultMembers = computed(() => memberStore.defaultMembers);
 const tempRatings = computed(() => formData.value.ratings.filter(r => r.memberId.startsWith('temp_')));
 
@@ -225,12 +233,27 @@ const formData = ref({
   ratings: [] as MemberRating[],
 });
 
-const nextCount = computed(() => recipeStore.getRecordsByRecipeId(recipeId).length + 1);
+const nextCount = computed(() => {
+  if (isEditMode.value && recordId) {
+    const existing = recipeStore.records.find(r => r.id === recordId);
+    return existing?.count || 1;
+  }
+  const rid = recipeId;
+  return rid ? recipeStore.getRecordsByRecipeId(rid).length + 1 : 1;
+});
 const todayStr = computed(() => {
   const d = new Date();
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 });
+const editDateStr = computed(() => {
+  if (!recordId) return '';
+  const existing = recipeStore.records.find(r => r.id === recordId);
+  if (!existing) return '';
+  const d = new Date(existing.createdAt);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+});
 const photoViewerIndex = ref(0);
+const showPhotoViewer = ref(false);
 const updateIngredients = ref(false);
 const updateSteps = ref(false);
 const expandIngredients = ref(false);
@@ -255,17 +278,44 @@ const durationMinutes = computed({
 onMounted(() => {
   recipeStore.loadData();
   memberStore.loadData();
-  if (recipe.value) {
-    formData.value.ingredients = recipe.value.ingredients || '';
-    formData.value.steps = recipe.value.steps || '';
+  if (isEditMode.value && recordId) {
+    const existing = recipeStore.records.find(r => r.id === recordId);
+    if (existing) {
+      formData.value.photos = [...existing.photos];
+      formData.value.ingredients = existing.ingredients;
+      formData.value.steps = existing.steps;
+      formData.value.difficulty = existing.difficulty;
+      formData.value.duration = existing.duration;
+      formData.value.notes = existing.notes;
+      formData.value.ratings = existing.ratings.map(r => ({ ...r }));
+    } else {
+      const unwatch = watch(() => recipeStore.records, (records) => {
+        const rec = records.find(r => r.id === recordId);
+        if (rec) {
+          formData.value.photos = [...rec.photos];
+          formData.value.ingredients = rec.ingredients;
+          formData.value.steps = rec.steps;
+          formData.value.difficulty = rec.difficulty;
+          formData.value.duration = rec.duration;
+          formData.value.notes = rec.notes;
+          formData.value.ratings = rec.ratings.map(r => ({ ...r }));
+          unwatch();
+        }
+      });
+    }
   } else {
-    const unwatch = watch(recipe, (val) => {
-      if (val) {
-        formData.value.ingredients = val.ingredients || '';
-        formData.value.steps = val.steps || '';
-        unwatch();
-      }
-    });
+    if (recipe.value) {
+      formData.value.ingredients = recipe.value.ingredients || '';
+      formData.value.steps = recipe.value.steps || '';
+    } else {
+      const unwatch = watch(recipe, (val) => {
+        if (val) {
+          formData.value.ingredients = val.ingredients || '';
+          formData.value.steps = val.steps || '';
+          unwatch();
+        }
+      });
+    }
   }
 });
 
@@ -312,40 +362,74 @@ function viewPhoto(photo: string) {
 function saveRecord() {
   if (!recipe.value) return;
 
-  // 计算这是第几次做
-  const existingRecords = recipeStore.getRecordsByRecipeId(recipeId);
-  const count = existingRecords.length + 1;
-
   // 过滤掉没有评分的成员
   const validRatings = formData.value.ratings.filter(r => r.stars > 0);
 
-  const record: CookingRecord = {
-    id: generateId(),
-    recipeId,
-    photos: formData.value.photos,
-    ingredients: formData.value.ingredients,
-    steps: formData.value.steps,
-    difficulty: formData.value.difficulty,
-    duration: formData.value.duration,
-    notes: formData.value.notes,
-    count,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    ratings: validRatings,
-  };
-
-  recipeStore.saveRecord(record);
-
-  // 根据开关状态更新菜谱默认值
-  if (updateIngredients.value || updateSteps.value) {
-    recipeStore.saveRecipe({
-      ...recipe.value,
-      ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
-      ...(updateSteps.value && { steps: formData.value.steps }),
+  if (isEditMode.value && recordId) {
+    const existing = recipeStore.records.find(r => r.id === recordId);
+    if (!existing) return;
+    recipeStore.saveRecord({
+      ...existing,
+      photos: formData.value.photos,
+      ingredients: formData.value.ingredients,
+      steps: formData.value.steps,
+      difficulty: formData.value.difficulty,
+      duration: formData.value.duration,
+      notes: formData.value.notes,
+      ratings: validRatings,
       updatedAt: Date.now(),
     });
-  }
+    // 根据开关状态更新菜谱默认值
+    if (updateIngredients.value || updateSteps.value) {
+      recipeStore.saveRecipe({
+        ...recipe.value,
+        ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
+        ...(updateSteps.value && { steps: formData.value.steps }),
+        updatedAt: Date.now(),
+      });
+    }
+    router.push(`/record/${recordId}`);
+  } else {
+    // 计算这是第几次做
+    const existingRecords = recipeStore.getRecordsByRecipeId(recipeId!);
+    const count = existingRecords.length + 1;
 
-  router.push(`/recipe/${recipeId}`);
+    const record: CookingRecord = {
+      id: generateId(),
+      recipeId: recipeId!,
+      photos: formData.value.photos,
+      ingredients: formData.value.ingredients,
+      steps: formData.value.steps,
+      difficulty: formData.value.difficulty,
+      duration: formData.value.duration,
+      notes: formData.value.notes,
+      count,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      ratings: validRatings,
+    };
+
+    recipeStore.saveRecord(record);
+
+    // 根据开关状态更新菜谱默认值
+    if (updateIngredients.value || updateSteps.value) {
+      recipeStore.saveRecipe({
+        ...recipe.value,
+        ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
+        ...(updateSteps.value && { steps: formData.value.steps }),
+        updatedAt: Date.now(),
+      });
+    }
+
+    router.push(`/recipe/${recipeId}`);
+  }
+}
+
+function goBack() {
+  if (isEditMode.value && recordId) {
+    router.push(`/record/${recordId}`);
+  } else {
+    router.push(`/recipe/${recipeId}`);
+  }
 }
 </script>

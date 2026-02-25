@@ -14,9 +14,9 @@
         />
         <button
           @click="removePhoto(index)"
-          class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+          class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
         >
-          ×
+          <X :size="14" />
         </button>
       </div>
     </div>
@@ -35,6 +35,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { selectPhotos, getPhotoUrl } from '@/utils/photo';
+import { X } from 'lucide-vue-next';
 
 const props = defineProps<{
   modelValue: string[];

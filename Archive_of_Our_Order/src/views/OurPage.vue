@@ -48,8 +48,8 @@
                 {{ item.rating.memberName }} · {{ formatDate(item.createdAt) }}
               </div>
             </div>
-            <div class="text-yellow-500">
-              {{ '⭐'.repeat(item.rating.stars) }}
+            <div class="flex items-center text-yellow-500">
+              <Star v-for="i in item.rating.stars" :key="i" :size="16" />
             </div>
           </div>
           <div v-if="item.rating.comment" class="text-gray-600 text-sm">
@@ -76,6 +76,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import { useMemberStore } from '@/stores/memberStore';
+import { Star } from 'lucide-vue-next';
 
 const router = useRouter();
 const recipeStore = useRecipeStore();

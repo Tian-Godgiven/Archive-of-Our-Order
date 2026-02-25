@@ -35,18 +35,18 @@
         <!-- 基本信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center gap-4 text-sm mb-3">
-            <span>⭐ {{ averageDifficulty.toFixed(1) }}</span>
-            <span>⏱️ {{ Math.round(averageDuration) }}分钟</span>
-            <span>📝 {{ records.length }}次</span>
+            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ averageDifficulty.toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Clock :size="14" /> {{ Math.round(averageDuration) }}分钟</span>
+            <span class="flex items-center gap-1"><FileText :size="14" /> {{ records.length }}次</span>
           </div>
-          <div class="text-red-500 font-medium mb-3">
-            {{ timeSinceLastCooked }}
+          <div class="font-medium mb-3" :class="getLastCookedColor(recipeStore.getLastCookedTime(recipeId))">
+            {{ getLastCookedText(recipeStore.getLastCookedTime(recipeId)) }}
           </div>
 
           <!-- 主厨总评 -->
           <div>
             <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-medium text-gray-700">主厨总评</label>
+              <label class="text-sm font-medium text-gray-500">主厨总评</label>
               <button v-if="!editingComment" @click="editingComment = true; newComment = recipe.chefComment" class="text-gray-400 p-1">
                 <Pencil :size="16" />
               </button>
@@ -55,7 +55,7 @@
                 <button @click="saveComment" class="text-sm text-blue-500 font-medium">保存</button>
               </div>
             </div>
-            <div v-if="!editingComment" class="text-gray-600">
+            <div v-if="!editingComment" class="text-gray-900">
               {{ recipe.chefComment || '暂无总评' }}
             </div>
             <div v-else>
@@ -71,7 +71,7 @@
         <!-- 默认食材 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-700">食材列表</label>
+            <label class="text-sm font-medium text-gray-500">食材列表</label>
             <button v-if="!editingIngredients" @click="editingIngredients = true; newIngredients = recipe.ingredients || ''" class="text-gray-400 p-1">
               <Pencil :size="16" />
             </button>
@@ -80,7 +80,7 @@
               <button @click="saveIngredients" class="text-sm text-blue-500 font-medium">保存</button>
             </div>
           </div>
-          <div v-if="!editingIngredients" class="text-gray-600 whitespace-pre-wrap">
+          <div v-if="!editingIngredients" class="text-gray-900 whitespace-pre-wrap">
             {{ recipe.ingredients || '暂未设置' }}
           </div>
           <div v-else>
@@ -91,7 +91,7 @@
         <!-- 默认步骤 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-medium text-gray-700">料理步骤</label>
+            <label class="text-sm font-medium text-gray-500">料理步骤</label>
             <button v-if="!editingSteps" @click="editingSteps = true; newSteps = recipe.steps || ''" class="text-gray-400 p-1">
               <Pencil :size="16" />
             </button>
@@ -100,7 +100,7 @@
               <button @click="saveSteps" class="text-sm text-blue-500 font-medium">保存</button>
             </div>
           </div>
-          <div v-if="!editingSteps" class="text-gray-600 whitespace-pre-wrap">
+          <div v-if="!editingSteps" class="text-gray-900 whitespace-pre-wrap">
             {{ recipe.steps || '暂未设置' }}
           </div>
           <div v-else>
@@ -177,7 +177,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import ModalOverlay from '@/components/ModalOverlay.vue';
 import IngredientEditor from '@/components/IngredientEditor.vue';
-import { ChevronLeft, Settings, Plus, Pencil } from 'lucide-vue-next';
+import { ChevronLeft, Settings, Plus, Pencil, Star, Clock, FileText } from 'lucide-vue-next';
+import { getLastCookedColor, getLastCookedText } from '@/composables/useLastCooked';
 
 const route = useRoute();
 const router = useRouter();
@@ -205,21 +206,6 @@ const minSwipeDistance = 50; // 最小滑动距离
 
 const averageDifficulty = computed(() => recipeStore.getAverageDifficulty(recipeId));
 const averageDuration = computed(() => recipeStore.getAverageDuration(recipeId));
-
-const timeSinceLastCooked = computed(() => {
-  const lastTime = recipeStore.getLastCookedTime(recipeId);
-  if (lastTime === 0) return '还没做过';
-
-  const now = Date.now();
-  const diff = now - lastTime;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return '今天做的';
-  if (days === 1) return '昨天做的';
-  if (days < 7) return `${days}天前`;
-  if (days < 30) return `${Math.floor(days / 7)}周前`;
-  return `${Math.floor(days / 30)}个月前`;
-});
 
 // 获取当前菜谱在列表中的索引
 const currentRecipeIndex = computed(() => {

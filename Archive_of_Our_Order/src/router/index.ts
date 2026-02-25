@@ -20,6 +20,11 @@ const router = createRouter({
     },
     {
       path: '/record/add/:recipeId',
+      name: 'RecordAdd',
+      component: () => import('@/views/RecordEdit.vue'),
+    },
+    {
+      path: '/record/edit/:id',
       name: 'RecordEdit',
       component: () => import('@/views/RecordEdit.vue'),
     },

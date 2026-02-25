@@ -35,12 +35,12 @@
         >
           <h3 class="text-lg font-semibold mb-2">{{ recipe.name }}</h3>
           <div class="flex items-center gap-4 text-sm text-gray-600">
-            <span>⭐ {{ getAverageDifficulty(recipe.id).toFixed(1) }}</span>
-            <span>⏱️ {{ Math.round(getAverageDuration(recipe.id)) }}分钟</span>
-            <span>📝 {{ getRecordCount(recipe.id) }}次</span>
+            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ getAverageDifficulty(recipe.id).toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Clock :size="14" /> {{ Math.round(getAverageDuration(recipe.id)) }}分钟</span>
+            <span class="flex items-center gap-1"><FileText :size="14" /> {{ getRecordCount(recipe.id) }}次</span>
           </div>
-          <div class="mt-2 font-medium" :class="getTimeSinceLastCookedColor(recipe.id)">
-            {{ getTimeSinceLastCooked(recipe.id) }}
+          <div class="mt-2 font-medium" :class="getLastCookedColor(recipeStore.getLastCookedTime(recipe.id))">
+            {{ getLastCookedText(recipeStore.getLastCookedTime(recipe.id)) }}
           </div>
         </div>
 
@@ -124,6 +124,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import ModalOverlay from '@/components/ModalOverlay.vue';
+import { Star, Clock, FileText } from 'lucide-vue-next';
+import { getLastCookedColor, getLastCookedText } from '@/composables/useLastCooked';
 
 const router = useRouter();
 const recipeStore = useRecipeStore();
@@ -185,31 +187,6 @@ function getRecordCount(recipeId: string) {
   return recipeStore.getRecordsByRecipeId(recipeId).length;
 }
 
-function getTimeSinceLastCookedColor(recipeId: string) {
-  const lastTime = recipeStore.getLastCookedTime(recipeId);
-  if (lastTime === 0) return 'text-orange-500';
-
-  const days = Math.floor((Date.now() - lastTime) / (1000 * 60 * 60 * 24));
-  if (days < 5) return 'text-blue-500';
-  if (days < 15) return 'text-green-500';
-  if (days < 30) return 'text-yellow-500';
-  return 'text-orange-500';
-}
-
-function getTimeSinceLastCooked(recipeId: string) {
-  const lastTime = recipeStore.getLastCookedTime(recipeId);
-  if (lastTime === 0) return '还没做过';
-
-  const now = Date.now();
-  const diff = now - lastTime;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) return '今天做的';
-  if (days === 1) return '昨天做的';
-  if (days < 7) return `${days}天前`;
-  if (days < 30) return `${Math.floor(days / 7)}周前`;
-  return `${Math.floor(days / 30)}个月前`;
-}
 
 function goToRecipe(id: string) {
   router.push(`/recipe/${id}`);
