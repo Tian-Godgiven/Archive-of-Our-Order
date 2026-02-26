@@ -8,3 +8,7 @@
 
 # Generated Android project (can be regenerated with `tauri android init`)
 /gen/android
+
+# Signing secrets - never commit these
+/gen/android/keystore.properties
+my-release-key.jks

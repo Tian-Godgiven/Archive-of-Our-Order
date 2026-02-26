@@ -2,7 +2,8 @@
   <div class="min-h-screen bg-gray-50 pb-4" @click="showMenu = false">
     <div class="max-w-md mx-auto" v-if="record && recipe">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-3 flex items-center justify-between z-10" style="padding-top: env(safe-area-inset-top)">
+        <div class="flex items-center justify-between w-full max-w-md mx-auto py-2">
         <button @click="goBack" class="text-gray-600 p-2 -ml-2">
           <ChevronLeft :size="24" />
         </button>
@@ -27,17 +28,18 @@
           </DropdownMenu>
         </div>
         <div v-else class="w-10"></div>
+        </div>
       </div>
 
       <!-- 查看模式 -->
-      <div class="p-4 space-y-4">
+      <div class="p-4 space-y-4" style="padding-top: calc(env(safe-area-inset-top) + 64px)">
         <!-- 照片相册 -->
         <div v-if="record.photos.length > 0" class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex gap-2 overflow-x-auto">
             <img
               v-for="(photo, index) in record.photos"
               :key="index"
-              :src="getPhotoUrl(photo)"
+              :src="photoUrls[photo] || ''"
               class="w-32 h-32 rounded object-cover cursor-pointer"
               @click="openPhotoViewer(index)"
             />
@@ -52,7 +54,7 @@
           </div>
           <div v-if="record.difficulty" class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-700">难度：</span>
-            <span class="flex items-center text-yellow-500"><Star v-for="i in record.difficulty" :key="i" :size="16" /></span>
+            <span class="flex items-center text-orange-500"><Flame v-for="i in record.difficulty" :key="i" :size="16" fill="currentColor" /></span>
           </div>
           <div v-if="record.duration" class="flex items-center gap-2">
             <span class="text-sm font-medium text-gray-700">时长：</span>
@@ -85,7 +87,7 @@
             <div v-for="rating in record.ratings" :key="rating.memberId" class="border-b border-gray-200 pb-3 last:border-0">
               <div class="flex items-center justify-between mb-1">
                 <span class="font-medium">{{ rating.memberName }}</span>
-                <span class="flex items-center text-yellow-500"><Star v-for="i in rating.stars" :key="i" :size="16" /></span>
+                <span class="flex items-center text-yellow-500"><Star v-for="i in rating.stars" :key="i" :size="16" fill="currentColor" /></span>
               </div>
               <div v-if="rating.comment" class="text-gray-600 text-sm">{{ rating.comment }}</div>
             </div>
@@ -109,13 +111,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import { getPhotoUrl } from '@/utils/photo';
 import PhotoViewer from '@/components/PhotoViewer.vue';
 import DropdownMenu from '@/components/DropdownMenu.vue';
-import { ChevronLeft, Star, MoreVertical } from 'lucide-vue-next';
+import { ChevronLeft, Star, MoreVertical, Flame } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -129,10 +131,22 @@ const recipe = computed(() => record.value ? recipeStore.getRecipeById(record.va
 const showPhotoViewer = ref(false);
 const photoViewerIndex = ref(0);
 const showMenu = ref(false);
+const photoUrls = ref<Record<string, string>>({});
+
+async function loadPhotoUrls() {
+  if (!record.value) return;
+  for (const photo of record.value.photos) {
+    if (!photoUrls.value[photo]) {
+      photoUrls.value[photo] = await getPhotoUrl(photo);
+    }
+  }
+}
 
 onMounted(() => {
   recipeStore.loadData();
 });
+
+watch(record, loadPhotoUrls, { immediate: true });
 
 function formatDate(timestamp: number) {
   const date = new Date(timestamp);

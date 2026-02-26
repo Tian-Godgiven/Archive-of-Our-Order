@@ -2,16 +2,18 @@
   <div class="min-h-screen bg-gray-50 pb-4">
     <div class="max-w-md mx-auto" v-if="recipe">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-3 flex items-center justify-between z-10" style="padding-top: env(safe-area-inset-top)">
+        <div class="flex items-center justify-between w-full max-w-md mx-auto py-2">
         <button @click="goBack" class="text-gray-600 p-2 -ml-2">
           <ChevronLeft :size="24" />
         </button>
         <h1 class="text-lg font-semibold">{{ isEditMode ? recipe.name + ' · 编辑记录' : recipe.name }}</h1>
         <button @click="saveRecord" class="text-blue-500">保存</button>
+        </div>
       </div>
 
       <!-- 内容区域 -->
-      <div class="p-4 space-y-4">
+      <div class="p-4 space-y-4" style="padding-top: calc(env(safe-area-inset-top) + 64px)">
         <!-- 次数和日期 -->
         <div class="bg-white rounded-lg p-4 shadow-sm flex items-center justify-between">
           <span class="text-sm font-medium text-gray-700">第{{ nextCount }}次</span>
@@ -359,16 +361,15 @@ function viewPhoto(photo: string) {
   }
 }
 
-function saveRecord() {
+async function saveRecord() {
   if (!recipe.value) return;
 
-  // 过滤掉没有评分的成员
   const validRatings = formData.value.ratings.filter(r => r.stars > 0);
 
   if (isEditMode.value && recordId) {
     const existing = recipeStore.records.find(r => r.id === recordId);
     if (!existing) return;
-    recipeStore.saveRecord({
+    await recipeStore.saveRecord({
       ...existing,
       photos: formData.value.photos,
       ingredients: formData.value.ingredients,
@@ -379,18 +380,16 @@ function saveRecord() {
       ratings: validRatings,
       updatedAt: Date.now(),
     });
-    // 根据开关状态更新菜谱默认值
     if (updateIngredients.value || updateSteps.value) {
-      recipeStore.saveRecipe({
+      await recipeStore.saveRecipe({
         ...recipe.value,
         ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
         ...(updateSteps.value && { steps: formData.value.steps }),
         updatedAt: Date.now(),
       });
     }
-    router.push(`/record/${recordId}`);
+    router.replace(`/record/${recordId}`);
   } else {
-    // 计算这是第几次做
     const existingRecords = recipeStore.getRecordsByRecipeId(recipeId!);
     const count = existingRecords.length + 1;
 
@@ -409,11 +408,10 @@ function saveRecord() {
       ratings: validRatings,
     };
 
-    recipeStore.saveRecord(record);
+    await recipeStore.saveRecord(record);
 
-    // 根据开关状态更新菜谱默认值
     if (updateIngredients.value || updateSteps.value) {
-      recipeStore.saveRecipe({
+      await recipeStore.saveRecipe({
         ...recipe.value,
         ...(updateIngredients.value && { ingredients: formData.value.ingredients }),
         ...(updateSteps.value && { steps: formData.value.steps }),
@@ -421,7 +419,7 @@ function saveRecord() {
       });
     }
 
-    router.push(`/recipe/${recipeId}`);
+    router.replace(`/recipe/${recipeId}`);
   }
 }
 

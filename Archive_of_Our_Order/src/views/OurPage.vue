@@ -2,13 +2,17 @@
   <div class="min-h-screen bg-gray-50 pb-20">
     <div class="max-w-md mx-auto">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm p-4 flex items-center justify-between z-10">
-        <h1 class="text-xl font-semibold">我们</h1>
-        <button @click="$router.push('/members')" class="text-blue-500">设置</button>
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm flex items-center justify-between z-10 px-4" style="padding-top: env(safe-area-inset-top)">
+        <div class="flex items-center justify-between w-full max-w-md mx-auto py-4">
+          <h1 class="text-xl font-semibold">我们</h1>
+          <button @click="$router.push('/members')" class="text-gray-600 p-2 -mr-2">
+            <UsersRound :size="22" />
+          </button>
+        </div>
       </div>
 
       <!-- 成员筛选栏 -->
-      <div class="bg-white p-4 shadow-sm overflow-x-auto">
+      <div class="bg-white p-4 shadow-sm overflow-x-auto touch-pan-x" style="margin-top: calc(env(safe-area-inset-top) + 64px)">
         <div class="flex gap-3">
           <button
             @click="selectedMemberId = null"
@@ -49,7 +53,7 @@
               </div>
             </div>
             <div class="flex items-center text-yellow-500">
-              <Star v-for="i in item.rating.stars" :key="i" :size="16" />
+              <Star v-for="i in item.rating.stars" :key="i" :size="16" fill="currentColor" />
             </div>
           </div>
           <div v-if="item.rating.comment" class="text-gray-600 text-sm">
@@ -63,7 +67,7 @@
       </div>
 
       <!-- 底部导航 -->
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex" style="padding-bottom: env(safe-area-inset-bottom)">
         <button @click="$router.push('/')" class="flex-1 py-3 text-gray-600">菜谱</button>
         <button class="flex-1 py-3 text-blue-500 font-medium">我们</button>
       </div>
@@ -76,7 +80,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import { useMemberStore } from '@/stores/memberStore';
-import { Star } from 'lucide-vue-next';
+import { Star, UsersRound } from 'lucide-vue-next';
 
 const router = useRouter();
 const recipeStore = useRecipeStore();

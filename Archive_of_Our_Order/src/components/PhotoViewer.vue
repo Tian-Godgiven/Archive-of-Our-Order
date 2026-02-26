@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { getPhotoUrl } from '@/utils/photo';
 import ModalOverlay from '@/components/ModalOverlay.vue';
 import { X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
@@ -66,16 +66,22 @@ const emit = defineEmits<{
 }>();
 
 const currentIndex = ref(props.initialIndex || 0);
+const currentPhotoUrl = ref('');
+
+async function updatePhotoUrl() {
+  if (props.photos.length === 0) {
+    currentPhotoUrl.value = '';
+    return;
+  }
+  currentPhotoUrl.value = await getPhotoUrl(props.photos[currentIndex.value]);
+}
+
+watch([() => props.photos, currentIndex], updatePhotoUrl, { immediate: true });
 
 // 滑动相关
 const touchStartX = ref(0);
 const touchEndX = ref(0);
 const minSwipeDistance = 50;
-
-const currentPhotoUrl = computed(() => {
-  if (props.photos.length === 0) return '';
-  return getPhotoUrl(props.photos[currentIndex.value]);
-});
 
 const hasPrevious = computed(() => currentIndex.value > 0);
 const hasNext = computed(() => currentIndex.value < props.photos.length - 1);

@@ -49,6 +49,15 @@ export const useRecipeStore = defineStore('recipe', {
       if (records.length === 0) return 0;
       return Math.max(...records.map(r => r.createdAt));
     },
+
+    // 获取菜谱的平均评价分（所有记录的所有成员评分的平均值，没有评分的不算）
+    getAverageRating: (state) => (recipeId: string) => {
+      const records = state.records.filter(r => r.recipeId === recipeId);
+      const allRatings = records.flatMap(r => r.ratings || []);
+      if (allRatings.length === 0) return 0;
+      const sum = allRatings.reduce((acc, r) => acc + r.stars, 0);
+      return sum / allRatings.length;
+    },
   },
 
   actions: {

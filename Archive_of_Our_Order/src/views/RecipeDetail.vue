@@ -7,7 +7,8 @@
   >
     <div class="max-w-md mx-auto" v-if="recipe">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-3 flex items-center justify-between z-10" style="padding-top: env(safe-area-inset-top)">
+        <div class="flex items-center justify-between w-full max-w-md mx-auto py-2">
         <button @click="$router.push('/')" class="text-gray-600 p-2 -ml-2">
           <ChevronLeft :size="24" />
         </button>
@@ -28,14 +29,16 @@
             <Plus :size="22" />
           </button>
         </div>
+        </div>
       </div>
 
       <!-- 内容区域 -->
-      <div class="p-4 space-y-4">
+      <div class="p-4 space-y-4" style="padding-top: calc(env(safe-area-inset-top) + 64px)">
         <!-- 基本信息 -->
         <div class="bg-white rounded-lg p-4 shadow-sm">
           <div class="flex items-center gap-4 text-sm mb-3">
-            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ averageDifficulty.toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Flame :size="14" class="text-orange-500" /> {{ averageDifficulty.toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ recipeStore.getAverageRating(recipeId).toFixed(1) }}</span>
             <span class="flex items-center gap-1"><Clock :size="14" /> {{ Math.round(averageDuration) }}分钟</span>
             <span class="flex items-center gap-1"><FileText :size="14" /> {{ records.length }}次</span>
           </div>
@@ -177,7 +180,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import ModalOverlay from '@/components/ModalOverlay.vue';
 import IngredientEditor from '@/components/IngredientEditor.vue';
-import { ChevronLeft, Settings, Plus, Pencil, Star, Clock, FileText } from 'lucide-vue-next';
+import { ChevronLeft, Settings, Plus, Pencil, Star, Clock, FileText, Flame } from 'lucide-vue-next';
 import { getLastCookedColor, getLastCookedText } from '@/composables/useLastCooked';
 
 const route = useRoute();

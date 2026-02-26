@@ -8,7 +8,7 @@
         class="relative flex-shrink-0"
       >
         <img
-          :src="getPhotoUrl(photo)"
+          :src="photoUrls[photo] || ''"
           class="w-24 h-24 rounded object-cover cursor-pointer"
           @click="$emit('view', photo)"
         />
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { selectPhotos, getPhotoUrl } from '@/utils/photo';
 import { X } from 'lucide-vue-next';
 
@@ -47,6 +47,17 @@ const emit = defineEmits<{
 }>();
 
 const uploading = ref(false);
+const photoUrls = ref<Record<string, string>>({});
+
+async function loadPhotoUrls() {
+  for (const photo of props.modelValue) {
+    if (!photoUrls.value[photo]) {
+      photoUrls.value[photo] = await getPhotoUrl(photo);
+    }
+  }
+}
+
+watch(() => props.modelValue, loadPhotoUrls, { immediate: true });
 
 async function addPhotos() {
   uploading.value = true;

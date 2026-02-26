@@ -2,7 +2,8 @@
   <div class="min-h-screen bg-gray-50 pb-4" @click="actionMenuMember = null">
     <div class="max-w-md mx-auto">
       <!-- 固定顶部栏 -->
-      <div class="sticky top-0 bg-white shadow-sm px-3 py-2 flex items-center justify-between z-10">
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-3 flex items-center justify-between z-10" style="padding-top: env(safe-area-inset-top)">
+        <div class="flex items-center justify-between w-full max-w-md mx-auto py-2">
         <button @click="$router.push('/our')" class="text-gray-600 p-2 -ml-2">
           <ChevronLeft :size="24" />
         </button>
@@ -10,10 +11,11 @@
         <button @click="openAddModal" class="text-blue-500 p-2 -mr-2">
           <Plus :size="22" />
         </button>
+        </div>
       </div>
 
       <!-- 内容区域 -->
-      <div class="p-4 space-y-3">
+      <div class="p-4 space-y-3" style="padding-top: calc(env(safe-area-inset-top) + 64px)">
         <div
           v-for="member in members"
           :key="member.id"

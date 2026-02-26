@@ -2,7 +2,8 @@
   <div class="min-h-screen bg-gray-50">
     <div class="max-w-md mx-auto">
       <!-- 顶部搜索和排序 -->
-      <div class="bg-white p-4 shadow-sm">
+      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-4 pt-[env(safe-area-inset-top)] z-10">
+        <div class="max-w-md mx-auto pb-3 pt-3">
         <input
           type="text"
           v-model="searchQuery"
@@ -23,10 +24,11 @@
             最久没做
           </button>
         </div>
+        </div>
       </div>
 
       <!-- 菜谱列表 -->
-      <div class="p-4 space-y-3">
+      <div class="p-4 space-y-3" style="padding-top: calc(env(safe-area-inset-top) + 120px);">
         <div
           v-for="recipe in filteredRecipes"
           :key="recipe.id"
@@ -35,7 +37,8 @@
         >
           <h3 class="text-lg font-semibold mb-2">{{ recipe.name }}</h3>
           <div class="flex items-center gap-4 text-sm text-gray-600">
-            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ getAverageDifficulty(recipe.id).toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Flame :size="14" class="text-orange-500" /> {{ getAverageDifficulty(recipe.id).toFixed(1) }}</span>
+            <span class="flex items-center gap-1"><Star :size="14" class="text-yellow-500" fill="currentColor" /> {{ getAverageRating(recipe.id).toFixed(1) }}</span>
             <span class="flex items-center gap-1"><Clock :size="14" /> {{ Math.round(getAverageDuration(recipe.id)) }}分钟</span>
             <span class="flex items-center gap-1"><FileText :size="14" /> {{ getRecordCount(recipe.id) }}次</span>
           </div>
@@ -52,13 +55,14 @@
       <!-- 添加按钮 -->
       <button
         @click="showQuickAdd = true"
-        class="fixed bottom-20 right-4 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-600 transition"
+        class="fixed right-4 w-14 h-14 bg-blue-500 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-blue-600 transition"
+        style="bottom: calc(env(safe-area-inset-bottom) + 72px)"
       >
         +
       </button>
 
       <!-- 底部导航 -->
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex">
+      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex" style="padding-bottom: env(safe-area-inset-bottom)">
         <button class="flex-1 py-3 text-blue-500 font-medium">菜谱</button>
         <button @click="$router.push('/our')" class="flex-1 py-3 text-gray-600">我们</button>
       </div>
@@ -124,7 +128,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useRecipeStore } from '@/stores/recipeStore';
 import ModalOverlay from '@/components/ModalOverlay.vue';
-import { Star, Clock, FileText } from 'lucide-vue-next';
+import { Star, Clock, FileText, Flame } from 'lucide-vue-next';
 import { getLastCookedColor, getLastCookedText } from '@/composables/useLastCooked';
 
 const router = useRouter();
@@ -177,6 +181,10 @@ const filteredSelectRecipes = computed(() => {
 
 function getAverageDifficulty(recipeId: string) {
   return recipeStore.getAverageDifficulty(recipeId);
+}
+
+function getAverageRating(recipeId: string) {
+  return recipeStore.getAverageRating(recipeId);
 }
 
 function getAverageDuration(recipeId: string) {

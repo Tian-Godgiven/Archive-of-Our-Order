@@ -1,6 +1,17 @@
 import { open } from '@tauri-apps/plugin-dialog';
-import { copyFile, BaseDirectory, exists, mkdir } from '@tauri-apps/plugin-fs';
+import { writeFile, BaseDirectory, exists, mkdir, readFile } from '@tauri-apps/plugin-fs';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { appDataDir } from '@tauri-apps/api/path';
 import { generateId } from './storage';
+
+let _appDataDir: string | null = null;
+
+async function getAppDataDir(): Promise<string> {
+  if (!_appDataDir) {
+    _appDataDir = await appDataDir();
+  }
+  return _appDataDir;
+}
 
 // 确保照片目录存在
 async function ensurePhotoDir() {
@@ -20,36 +31,46 @@ export async function selectPhotos(): Promise<string[]> {
     }]
   });
 
+  console.log('[photo] selected:', selected);
+
   if (!selected) return [];
 
-  // 如果是单个文件，转换为数组
   const files = Array.isArray(selected) ? selected : [selected];
+  console.log('[photo] files to process:', files);
 
-  // 复制文件到应用数据目录
   await ensurePhotoDir();
   const savedPaths: string[] = [];
 
   for (const file of files) {
-    const ext = file.split('.').pop();
+    // Android 返回 content URI，不能直接从路径提取扩展名
+    let ext = 'jpg';
+    if (!file.startsWith('content://')) {
+      ext = file.split('.').pop() || 'jpg';
+    }
     const newFileName = `${generateId()}.${ext}`;
     const destPath = `photos/${newFileName}`;
 
     try {
-      await copyFile(file, destPath, {
-        fromPathBaseDir: undefined,
-        toPathBaseDir: BaseDirectory.AppData
-      });
+      console.log('[photo] reading file:', file);
+      const data = await readFile(file);
+      console.log('[photo] read success, size:', data.byteLength);
+      await writeFile(destPath, data, { baseDir: BaseDirectory.AppData });
+      console.log('[photo] written to:', destPath);
       savedPaths.push(destPath);
     } catch (error) {
-      console.error('Failed to copy photo:', error);
+      console.error('[photo] failed to save photo:', file, error);
+      alert(`保存照片失败: ${error}`);
     }
   }
 
+  console.log('[photo] savedPaths:', savedPaths);
   return savedPaths;
 }
 
-// 获取照片的完整路径（用于显示）
-export function getPhotoUrl(photoPath: string): string {
-  // 在 Tauri 中，使用 convertFileSrc 来获取可以在 img 标签中使用的 URL
-  return `appdata:///${photoPath}`;
+// 获取照片的显示 URL
+export async function getPhotoUrl(photoPath: string): Promise<string> {
+  const dir = await getAppDataDir();
+  const separator = dir.endsWith('/') || dir.endsWith('\\') ? '' : '/';
+  return convertFileSrc(`${dir}${separator}${photoPath}`);
 }
+
