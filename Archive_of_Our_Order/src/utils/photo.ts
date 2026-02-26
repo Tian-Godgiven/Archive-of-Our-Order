@@ -30,12 +30,12 @@ export async function selectPhotos(): Promise<string[]> {
   const savedPaths: string[] = [];
 
   for (const file of files) {
-    const ext = file.path.split('.').pop();
+    const ext = file.split('.').pop();
     const newFileName = `${generateId()}.${ext}`;
     const destPath = `photos/${newFileName}`;
 
     try {
-      await copyFile(file.path, destPath, {
+      await copyFile(file, destPath, {
         fromPathBaseDir: undefined,
         toPathBaseDir: BaseDirectory.AppData
       });

@@ -6,7 +6,10 @@ let _store: StoreInstance | null = null;
 
 async function getStore(): Promise<StoreInstance> {
   if (!_store) {
-    _store = await load('app-data.json', { autoSave: false });
+    _store = await load('app-data.json', {
+      autoSave: false,
+      defaults: {}
+    });
   }
   return _store;
 }
