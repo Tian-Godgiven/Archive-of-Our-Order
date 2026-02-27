@@ -3,7 +3,8 @@
     <div class="relative w-full h-full" @click.stop>
       <!-- 关闭按钮 -->
       <button
-        class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30 z-10"
+        class="absolute right-4 w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 z-10"
+        style="top: max(1rem, env(safe-area-inset-top, 1rem))"
         @click="close"
       >
         <X :size="20" />
@@ -25,14 +26,14 @@
         <button
           v-if="hasPrevious"
           @click="previous"
-          class="absolute left-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30"
+          class="absolute left-4 w-12 h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40"
         >
           <ChevronLeft :size="24" />
         </button>
         <button
           v-if="hasNext"
           @click="next"
-          class="absolute right-4 w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-white hover:bg-opacity-30"
+          class="absolute right-4 w-12 h-12 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40"
         >
           <ChevronRight :size="24" />
         </button>
@@ -40,7 +41,7 @@
         <!-- 指示器 -->
         <div
           v-if="photos.length > 1"
-          class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 px-3 py-1 rounded-full text-white text-sm"
+          class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-white text-sm"
         >
           {{ currentIndex + 1 }} / {{ photos.length }}
         </div>
@@ -67,6 +68,14 @@ const emit = defineEmits<{
 
 const currentIndex = ref(props.initialIndex || 0);
 const currentPhotoUrl = ref('');
+
+// 处理 Android 返回键
+watch(() => props.visible, (visible) => {
+  if (visible) {
+    // 打开时添加一个历史记录
+    window.history.pushState({ photoViewer: true }, '');
+  }
+});
 
 async function updatePhotoUrl() {
   if (props.photos.length === 0) {
@@ -134,16 +143,28 @@ function handleKeydown(e: KeyboardEvent) {
   if (!props.visible) return;
 
   if (e.key === 'Escape') {
+    e.preventDefault();
     close();
   } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
     previous();
   } else if (e.key === 'ArrowRight') {
+    e.preventDefault();
     next();
+  }
+}
+
+// 处理 Android 返回键
+function handleBackButton(e: PopStateEvent) {
+  if (props.visible && e.state?.photoViewer) {
+    e.preventDefault();
+    close();
   }
 }
 
 // 添加和移除键盘事件监听
 if (typeof window !== 'undefined') {
   window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('popstate', handleBackButton);
 }
 </script>

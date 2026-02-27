@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 pb-4" @click="actionMenuMember = null">
+  <div class="min-h-screen bg-gray-50" style="padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem))" @click="actionMenuMember = null">
     <div class="max-w-md mx-auto">
       <!-- 固定顶部栏 -->
       <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-3 flex items-center justify-between z-10" style="padding-top: env(safe-area-inset-top)">

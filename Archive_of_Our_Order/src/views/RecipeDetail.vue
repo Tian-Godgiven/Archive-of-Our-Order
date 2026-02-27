@@ -1,6 +1,7 @@
 <template>
   <div
-    class="min-h-screen bg-gray-50 pb-4"
+    class="min-h-screen bg-gray-50"
+    style="padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem))"
     @touchstart="handleTouchStart"
     @touchmove="handleTouchMove"
     @touchend="handleTouchEnd"
@@ -128,7 +129,7 @@
             <div class="flex items-start gap-3">
               <img
                 v-if="record.photos.length > 0"
-                :src="record.photos[0]"
+                :src="recordThumbnails[record.id]"
                 class="w-16 h-16 rounded object-cover"
               />
               <div class="flex-1">
@@ -182,6 +183,7 @@ import ModalOverlay from '@/components/ModalOverlay.vue';
 import IngredientEditor from '@/components/IngredientEditor.vue';
 import { ChevronLeft, Settings, Plus, Pencil, Star, Clock, FileText, Flame } from 'lucide-vue-next';
 import { getLastCookedColor, getLastCookedText } from '@/composables/useLastCooked';
+import { getThumbnailUrl } from '@/utils/photo';
 
 const route = useRoute();
 const router = useRouter();
@@ -201,6 +203,18 @@ const editingIngredients = ref(false);
 const newIngredients = ref('');
 const editingSteps = ref(false);
 const newSteps = ref('');
+const recordThumbnails = ref<Record<string, string>>({});
+
+// 加载记录缩略图
+async function loadRecordThumbnails() {
+  for (const record of records.value) {
+    if (record.photos.length > 0 && !recordThumbnails.value[record.id]) {
+      recordThumbnails.value[record.id] = await getThumbnailUrl(record.photos[0]);
+    }
+  }
+}
+
+watch(records, loadRecordThumbnails, { immediate: true });
 
 // 滑动相关
 const touchStartX = ref(0);
