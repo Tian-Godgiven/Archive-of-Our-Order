@@ -72,6 +72,10 @@ Archive_of_Our_Order/
 
 本项目大部分代码由 AI (Claude) 编写，是一次 AI 辅助编程的实践。从需求分析、架构设计到具体实现，AI 参与了绝大部分的开发工作，人类开发者主要负责需求定义、方向把控和最终验收。
 
+## 下载
+
+前往 [Releases](https://github.com/Tian-Godgiven/Archive-of-Our-Order/releases) 页面下载最新版本的 APK 安装包。
+
 ## License
 
 MIT
