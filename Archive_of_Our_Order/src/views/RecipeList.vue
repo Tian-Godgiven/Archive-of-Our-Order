@@ -1,34 +1,34 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <div class="max-w-md mx-auto">
-      <!-- 顶部搜索和排序 -->
-      <div class="fixed top-0 left-0 right-0 bg-white shadow-sm px-4 pt-[env(safe-area-inset-top)] z-10">
-        <div class="max-w-md mx-auto pb-3 pt-3">
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="搜索菜谱..."
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <div class="mt-2 flex gap-2">
-          <button
-            @click="sortBy = 'default'"
-            :class="['px-3 py-1 rounded-lg text-sm', sortBy === 'default' ? 'bg-blue-500 text-white' : 'bg-gray-200']"
-          >
-            默认排序
-          </button>
-          <button
-            @click="sortBy = 'lastCooked'"
-            :class="['px-3 py-1 rounded-lg text-sm', sortBy === 'lastCooked' ? 'bg-blue-500 text-white' : 'bg-gray-200']"
-          >
-            最久没做
-          </button>
-        </div>
-        </div>
+  <div class="h-screen flex flex-col bg-gray-50">
+    <!-- 顶部搜索和排序 -->
+    <div class="bg-white shadow-sm px-4 pt-[env(safe-area-inset-top)] z-10 shrink-0">
+      <div class="max-w-md mx-auto pb-3 pt-3">
+      <input
+        type="text"
+        v-model="searchQuery"
+        placeholder="搜索菜谱..."
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <div class="mt-2 flex gap-2">
+        <button
+          @click="sortBy = 'default'"
+          :class="['px-3 py-1 rounded-lg text-sm', sortBy === 'default' ? 'bg-blue-500 text-white' : 'bg-gray-200']"
+        >
+          默认排序
+        </button>
+        <button
+          @click="sortBy = 'lastCooked'"
+          :class="['px-3 py-1 rounded-lg text-sm', sortBy === 'lastCooked' ? 'bg-blue-500 text-white' : 'bg-gray-200']"
+        >
+          最久没做
+        </button>
       </div>
+      </div>
+    </div>
 
-      <!-- 菜谱列表 -->
-      <div class="p-4 space-y-3" style="padding-top: calc(env(safe-area-inset-top) + 120px);">
+    <!-- 菜谱列表 -->
+    <div class="flex-1 overflow-y-auto relative">
+      <div class="max-w-md mx-auto p-4 space-y-3">
         <div
           v-for="recipe in filteredRecipes"
           :key="recipe.id"
@@ -60,66 +60,66 @@
       >
         +
       </button>
-
-      <!-- 底部导航 -->
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex" style="padding-bottom: env(safe-area-inset-bottom)">
-        <button class="flex-1 py-3 text-blue-500 font-medium">菜谱</button>
-        <button @click="$router.push('/our')" class="flex-1 py-3 text-gray-600">我们</button>
-      </div>
-
-      <!-- 快速添加弹窗 -->
-      <ModalOverlay :visible="showQuickAdd" @close="showQuickAdd = false">
-        <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full" @click.stop>
-          <h3 class="text-lg font-semibold mb-4">添加记录</h3>
-          <div class="space-y-3">
-            <button
-              @click="createNewRecipe"
-              class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-            >
-              创建新菜谱
-            </button>
-            <button
-              @click="showSelectRecipe = true; showQuickAdd = false"
-              class="w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
-            >
-              选择已有菜谱
-            </button>
-          </div>
-        </div>
-      </ModalOverlay>
-
-      <!-- 选择已有菜谱弹窗 -->
-      <ModalOverlay :visible="showSelectRecipe" @close="showSelectRecipe = false">
-        <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full max-h-96 flex flex-col" @click.stop>
-          <h3 class="text-lg font-semibold mb-4">选择菜谱</h3>
-
-          <!-- 搜索框 -->
-          <input
-            v-model="selectSearchQuery"
-            type="text"
-            placeholder="搜索菜谱..."
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-          />
-
-          <!-- 菜谱列表 -->
-          <div class="flex-1 overflow-y-auto space-y-2">
-            <div
-              v-for="recipe in filteredSelectRecipes"
-              :key="recipe.id"
-              @click="selectRecipeForRecord(recipe.id)"
-              class="p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-            >
-              <div class="font-medium">{{ recipe.name }}</div>
-              <div class="text-sm text-gray-600">做过 {{ getRecordCount(recipe.id) }} 次</div>
-            </div>
-          </div>
-
-          <div v-if="filteredSelectRecipes.length === 0" class="text-center text-gray-500 py-4">
-            没有找到菜谱
-          </div>
-        </div>
-      </ModalOverlay>
     </div>
+
+    <!-- 底部导航 -->
+    <div class="bg-white border-t border-gray-200 flex shrink-0" style="padding-bottom: env(safe-area-inset-bottom)">
+      <button class="flex-1 py-3 text-blue-500 font-medium">菜谱</button>
+      <button @click="$router.push('/our')" class="flex-1 py-3 text-gray-600">我们</button>
+    </div>
+
+    <!-- 快速添加弹窗 -->
+    <ModalOverlay :visible="showQuickAdd" @close="showQuickAdd = false">
+      <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full" @click.stop>
+        <h3 class="text-lg font-semibold mb-4">添加记录</h3>
+        <div class="space-y-3">
+          <button
+            @click="createNewRecipe"
+            class="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+          >
+            创建新菜谱
+          </button>
+          <button
+            @click="showSelectRecipe = true; showQuickAdd = false"
+            class="w-full py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+          >
+            选择已有菜谱
+          </button>
+        </div>
+      </div>
+    </ModalOverlay>
+
+    <!-- 选择已有菜谱弹窗 -->
+    <ModalOverlay :visible="showSelectRecipe" @close="showSelectRecipe = false">
+      <div class="bg-white rounded-lg p-6 m-4 max-w-sm w-full max-h-96 flex flex-col" @click.stop>
+        <h3 class="text-lg font-semibold mb-4">选择菜谱</h3>
+
+        <!-- 搜索框 -->
+        <input
+          v-model="selectSearchQuery"
+          type="text"
+          placeholder="搜索菜谱..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+        />
+
+        <!-- 菜谱列表 -->
+        <div class="flex-1 overflow-y-auto space-y-2">
+          <div
+            v-for="recipe in filteredSelectRecipes"
+            :key="recipe.id"
+            @click="selectRecipeForRecord(recipe.id)"
+            class="p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
+          >
+            <div class="font-medium">{{ recipe.name }}</div>
+            <div class="text-sm text-gray-600">做过 {{ getRecordCount(recipe.id) }} 次</div>
+          </div>
+        </div>
+
+        <div v-if="filteredSelectRecipes.length === 0" class="text-center text-gray-500 py-4">
+          没有找到菜谱
+        </div>
+      </div>
+    </ModalOverlay>
   </div>
 </template>
 
