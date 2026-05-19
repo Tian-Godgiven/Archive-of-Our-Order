@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+src-tauri/gen/android
+*.jks
+*.apk
 
 # Editor directories and files
 .vscode/*
